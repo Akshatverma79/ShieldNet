@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -125,7 +125,7 @@ def run_scan(req: ScanRequest, db: Session = Depends(get_db)) -> dict:
             description     = t["description"],
             recommendation  = t["recommendation"],
             status          = "OPEN",
-            discovered_at   = datetime.utcnow(),
+            discovered_at   = datetime.now(timezone.utc),
         )
         db.add(v)
         db.commit()
@@ -137,7 +137,7 @@ def run_scan(req: ScanRequest, db: Session = Depends(get_db)) -> dict:
         "scan_type": req.scan_type,
         "findings": len(created),
         "results":  created,
-        "scanned_at": datetime.utcnow().isoformat(),
+        "scanned_at": datetime.now(timezone.utc).isoformat(),
     }
 
 

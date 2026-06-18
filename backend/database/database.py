@@ -1,8 +1,6 @@
 """
 ShieldNet Database Engine
 SQLAlchemy session management with SQLite.
-No dependency on backend.config — DB path is computed directly to avoid
-any circular-import risk.
 """
 from __future__ import annotations
 
@@ -14,13 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from backend.database.models import Base
-
-# ── DB URL ───────────────────────────────────────────────────────
-_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATABASE_URL: str = os.getenv(
-    "DATABASE_URL",
-    f"sqlite:///{os.path.join(_BACKEND_DIR, 'shieldnet.db')}",
-)
+from backend.config import DATABASE_URL
 
 # ── Engine ───────────────────────────────────────────────────────
 # check_same_thread is a SQLite-only argument; skip it for other databases

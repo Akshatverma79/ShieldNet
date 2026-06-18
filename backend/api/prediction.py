@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -74,7 +74,7 @@ async def run_prediction(payload: PredictRequest):
             db = SessionLocal()
             try:
                 log = ThreatLog(
-                    timestamp        = datetime.utcnow(),
+                    timestamp        = datetime.now(timezone.utc),
                     source_ip        = payload.src_ip,
                     destination_ip   = payload.dst_ip,
                     source_port      = payload.src_port,

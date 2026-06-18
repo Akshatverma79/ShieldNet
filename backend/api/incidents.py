@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -24,28 +24,12 @@ from sqlalchemy.orm import Session
 from backend.database.database import get_db
 from backend.database.models import Incident, ThreatLog
 from backend.api.websocket import manager
+from backend.constants import MITRE_MAP, PLAYBOOK_MAP
 
 router = APIRouter(prefix="/api/incidents", tags=["Incidents"])
 logger = logging.getLogger("shieldnet.incidents")
 
-# MITRE map (shared constant — copied here to avoid circular import)
-_MITRE_MAP = {
-    "DDoS":        {"id": "T1498", "tactic": "Impact",              "name": "Network Denial of Service"},
-    "Port Scan":   {"id": "T1046", "tactic": "Discovery",           "name": "Network Service Discovery"},
-    "Brute Force": {"id": "T1110", "tactic": "Credential Access",   "name": "Brute Force"},
-    "Web Attack":  {"id": "T1190", "tactic": "Initial Access",      "name": "Exploit Public-Facing Application"},
-    "Infiltration":{"id": "T1071", "tactic": "Command and Control", "name": "Application Layer Protocol"},
-    "Unknown Threat":{"id":"T1059","tactic": "Execution",           "name": "Command and Scripting Interpreter"},
-}
-
-_PLAYBOOK = {
-    "DDoS":        ["Analyse inbound traffic volume", "Block source IPs at perimeter", "Activate upstream scrubbing", "Generate executive report", "Notify NOC"],
-    "Port Scan":   ["Identify scanning source", "Block at firewall", "Review exposed service list", "Enable IDS signatures", "Document findings"],
-    "Brute Force": ["Identify targeted account/service", "Lock account / block IP", "Enable MFA", "Audit auth logs", "Notify account owner"],
-    "Web Attack":  ["Identify exploited endpoint", "Block in WAF", "Patch vulnerability", "Review access logs", "Assess data exposure"],
-    "Infiltration":["Isolate host", "Capture forensic image", "Revoke credentials", "Escalate to IR team", "Preserve evidence chain"],
-    "Unknown Threat":["Quarantine source", "Capture full packet trace", "Submit for analysis", "Elevate monitoring", "Create IR ticket"],
-}
+# MITRE_MAP and PLAYBOOK_MAP are imported from backend.constants
 
 
 # ── Schemas ─────────────────────────────────────────────────────
@@ -111,8 +95,8 @@ def get_incident(incident_id: int, db: Session = Depends(get_db)) -> dict:
 
 @router.post("", summary="Create incident manually", status_code=201)
 async def create_incident(body: IncidentCreate, db: Session = Depends(get_db)) -> dict:
-    mitre    = _MITRE_MAP.get(body.attack_type, _MITRE_MAP["Unknown Threat"])
-    playbook = _PLAYBOOK.get(body.attack_type, _PLAYBOOK["Unknown Threat"])
+    mitre    = MITRE_MAP.get(body.attack_type, MITRE_MAP["Unknown Threat"])
+    playbook = PLAYBOOK_MAP.get(body.attack_type, PLAYBOOK_MAP["Unknown Threat"])
 
     inc = Incident(
         title        = body.title,
@@ -125,8 +109,8 @@ async def create_incident(body: IncidentCreate, db: Session = Depends(get_db)) -
         mitre_tactic = mitre["tactic"],
         playbook     = json.dumps(playbook),
         log_id       = body.log_id,
-        created_at   = datetime.utcnow(),
-        updated_at   = datetime.utcnow(),
+        created_at   = datetime.now(timezone.utc),
+        updated_at   = datetime.now(timezone.utc),
     )
     db.add(inc)
     db.commit()
@@ -147,8 +131,8 @@ async def auto_create(log_id: int, db: Session = Depends(get_db)) -> dict:
     if log.status != "THREAT":
         raise HTTPException(status_code=400, detail="Log is not a THREAT — no incident needed")
 
-    mitre    = _MITRE_MAP.get(log.attack_type, _MITRE_MAP["Unknown Threat"])
-    playbook = _PLAYBOOK.get(log.attack_type, _PLAYBOOK["Unknown Threat"])
+    mitre    = MITRE_MAP.get(log.attack_type, MITRE_MAP["Unknown Threat"])
+    playbook = PLAYBOOK_MAP.get(log.attack_type, PLAYBOOK_MAP["Unknown Threat"])
 
     inc = Incident(
         title        = f"{log.attack_type} from {log.source_ip}",
@@ -166,8 +150,8 @@ async def auto_create(log_id: int, db: Session = Depends(get_db)) -> dict:
         mitre_tactic = mitre["tactic"],
         playbook     = json.dumps(playbook),
         log_id       = log.id,
-        created_at   = datetime.utcnow(),
-        updated_at   = datetime.utcnow(),
+        created_at   = datetime.now(timezone.utc),
+        updated_at   = datetime.now(timezone.utc),
     )
     db.add(inc)
     db.commit()
@@ -191,7 +175,7 @@ async def update_incident(
         inc.notes = body.notes
     if body.assigned_to is not None:
         inc.assigned_to = body.assigned_to
-    inc.updated_at = datetime.utcnow()
+    inc.updated_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(inc)

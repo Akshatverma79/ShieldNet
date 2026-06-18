@@ -1,13 +1,35 @@
+# ─── Python ──────────────────────────────────────────────────────
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
 
+# ─── Environment ─────────────────────────────────────────────────
 .env
 
-node_modules/
+# ─── Database ────────────────────────────────────────────────────
+*.db
 
-frontend/.next/
+# ─── ML model artefacts (retrain locally with: python -m backend.ml.train)
+*.pkl
 
+# ─── Dataset (too large for git — download CICIDS2017 separately)
 dataset/*.csv
 
+# ─── Node / Frontend ────────────────────────────────────────────
+node_modules/
+frontend/dist/
+
+# ─── Logs ────────────────────────────────────────────────────────
 *.log
+backend/logs/
+
+# ─── IDE / OS ────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store

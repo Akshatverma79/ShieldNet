@@ -86,6 +86,7 @@ class PacketCapture:
                 prn=self._handle_packet,
                 store=False,
                 iface=self._iface,
+                filter="not port 8000 and not port 3000",
                 stop_filter=lambda _: not self._running,
             )
         except Exception as exc:

@@ -7,7 +7,7 @@ as a parsed Python list from to_dict() so all consumers get a consistent type.
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import declarative_base
@@ -19,7 +19,7 @@ class ThreatLog(Base):
     __tablename__ = "threat_logs"
 
     id               = Column(Integer, primary_key=True, autoincrement=True)
-    timestamp        = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    timestamp        = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     source_ip        = Column(String(45), nullable=False, default="0.0.0.0")
     destination_ip   = Column(String(45), nullable=False, default="0.0.0.0")
     source_port      = Column(Integer, default=0)
@@ -65,7 +65,7 @@ class SystemStats(Base):
     __tablename__ = "system_stats"
 
     id               = Column(Integer, primary_key=True, autoincrement=True)
-    timestamp        = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp        = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     packets_analysed = Column(Integer, default=0)
     threats_detected = Column(Integer, default=0)
     normal_traffic   = Column(Integer, default=0)
@@ -99,8 +99,8 @@ class Incident(Base):
     notes        = Column(Text, default="")
     assigned_to  = Column(String(64), default="Unassigned")
     log_id       = Column(Integer, nullable=True)          # FK to threat_logs (soft ref)
-    created_at   = Column(DateTime, default=datetime.utcnow, index=True)
-    updated_at   = Column(DateTime, default=datetime.utcnow)
+    created_at   = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at   = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> dict:
         try:
@@ -139,7 +139,7 @@ class Vulnerability(Base):
     description     = Column(Text, default="")
     recommendation  = Column(Text, default="")
     status          = Column(String(32), default="OPEN")    # OPEN|MITIGATED|ACCEPTED|FALSE_POSITIVE
-    discovered_at   = Column(DateTime, default=datetime.utcnow, index=True)
+    discovered_at   = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     def to_dict(self) -> dict:
         return {

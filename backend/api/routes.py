@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
@@ -115,7 +115,7 @@ def get_traffic_chart(
     minutes: int = Query(60, ge=5, le=1440),
     db: Session  = Depends(get_db),
 ) -> dict:
-    since   = datetime.utcnow() - timedelta(minutes=minutes)
+    since   = datetime.now(timezone.utc) - timedelta(minutes=minutes)
     rows    = db.query(ThreatLog).filter(ThreatLog.timestamp >= since).order_by(ThreatLog.timestamp).all()
     buckets: dict = {}
     for row in rows:
@@ -195,7 +195,7 @@ async def simulate_attack(
                 payload = gen()
                 result  = ml_predict(payload["features"])
                 log = ThreatLog(
-                    timestamp        = datetime.utcnow(),
+                    timestamp        = datetime.now(timezone.utc),
                     source_ip        = payload["src_ip"],
                     destination_ip   = payload["dst_ip"],
                     source_port      = payload["src_port"],
@@ -261,5 +261,5 @@ def health_check() -> dict:
     return {
         "status":    "operational",
         "service":   "ShieldNet",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

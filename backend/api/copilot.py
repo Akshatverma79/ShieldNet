@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from backend.database.database import get_db
 from backend.database.models import ThreatLog
+from backend.constants import MITRE_MAP, ACTIONS_MAP, URGENCY_MAP
 
 router = APIRouter(prefix="/api/copilot", tags=["AI Copilot"])
 logger = logging.getLogger("shieldnet.copilot")
@@ -42,28 +43,7 @@ class AnalyzeRequest(BaseModel):
     log_id:   Optional[int] = None
     features: Optional[Dict[str, Any]] = None
 
-# ── MITRE ATT&CK knowledge base ─────────────────────────────────
-MITRE_MAP = {
-    "DDoS":        {"id": "T1498", "tactic": "Impact",              "name": "Network Denial of Service"},
-    "Port Scan":   {"id": "T1046", "tactic": "Discovery",           "name": "Network Service Discovery"},
-    "Brute Force": {"id": "T1110", "tactic": "Credential Access",   "name": "Brute Force"},
-    "Web Attack":  {"id": "T1190", "tactic": "Initial Access",      "name": "Exploit Public-Facing Application"},
-    "Infiltration":{"id": "T1071", "tactic": "Command and Control", "name": "Application Layer Protocol"},
-    "Unknown Threat":{"id":"T1059","tactic": "Execution",           "name": "Command and Scripting Interpreter"},
-}
-
-# ── Recommended actions per attack type ─────────────────────────
-ACTIONS_MAP = {
-    "DDoS":        ["Rate-limit inbound traffic from source IP", "Enable upstream scrubbing / CDN protection", "Notify NOC team immediately", "Create incident report"],
-    "Port Scan":   ["Block source IP at firewall", "Enable IDS signatures for reconnaissance", "Review open services on target host", "Log for threat intel feed"],
-    "Brute Force": ["Lock account after N failed attempts", "Block source IP", "Enable MFA on targeted service", "Audit authentication logs"],
-    "Web Attack":  ["Block malicious request pattern in WAF", "Patch identified vulnerability", "Review application access logs", "Isolate affected endpoint"],
-    "Infiltration":["Isolate affected host from network", "Capture memory dump for forensics", "Revoke compromised credentials", "Escalate to IR team"],
-    "Unknown Threat":["Quarantine source", "Capture full packet trace", "Submit sample for analysis", "Elevate monitoring sensitivity"],
-}
-
-# ── Severity to response urgency ────────────────────────────────
-URGENCY = {"CRITICAL": "IMMEDIATE", "HIGH": "URGENT", "MEDIUM": "ELEVATED", "LOW": "ROUTINE"}
+# MITRE_MAP, ACTIONS_MAP, and URGENCY_MAP are imported from backend.constants
 
 # ── Simple rule-based copilot engine ────────────────────────────
 
@@ -80,7 +60,7 @@ def _build_threat_analysis(log: ThreatLog) -> Dict:
         "risk_score":    log.risk_score,
         "confidence":    log.confidence,
         "severity":      log.severity,
-        "urgency":       URGENCY.get(log.severity, "ROUTINE"),
+        "urgency":       URGENCY_MAP.get(log.severity, "ROUTINE"),
         "source_ip":     log.source_ip,
         "destination_ip":log.destination_ip,
         "protocol":      log.protocol,
@@ -105,7 +85,7 @@ def _generate_explanation(log: ThreatLog, reasons: list, mitre: dict) -> str:
         f"**Threat Analysis — {log.attack_type}**\n",
         f"Source IP `{log.source_ip}` was flagged with **{log.risk_score:.1f}% risk score** "
         f"and **{log.confidence * 100:.0f}% model confidence**.\n",
-        f"**Severity:** {log.severity}  |  **Urgency:** {URGENCY.get(log.severity, 'ROUTINE')}\n",
+        f"**Severity:** {log.severity}  |  **Urgency:** {URGENCY_MAP.get(log.severity, 'ROUTINE')}\n",
         "\n**Detected Behaviours:**",
     ]
     for r in reasons:

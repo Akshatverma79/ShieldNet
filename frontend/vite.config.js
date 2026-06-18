@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    allowedHosts: true,
     proxy: {
       // WebSocket MUST come before the generic /api rule or Vite matches /api first
       "/api/ws": {

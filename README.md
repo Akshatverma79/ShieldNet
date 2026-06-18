@@ -23,12 +23,16 @@ AI-powered analysis, and a comprehensive SOC dashboard.
 
 ```bash
 # From ShieldNet root
+python -m venv venv                # first time only
 venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Linux / macOS
 
 pip install -r backend\requirements.txt
 
-# Train the ML model (first time only)
+# (Optional) Download CICIDS2017 dataset and place CSVs in dataset/
+# https://www.unb.ca/cic/datasets/ids-2017.html
+
+# Train the ML model (first time only — pre-trained .pkl files are included)
 python -m backend.ml.preprocessing
 python -m backend.ml.train
 
@@ -80,7 +84,7 @@ ShieldNet/
 ├── backend/
 │   ├── app.py                 ← FastAPI entry point (v3.0.0)
 │   ├── config.py              ← Central configuration
-│   ├── run.py                 ← Dev launcher with hot-reload
+│   ├── run.py                 ← Dev launcher with hot-reload (at project root)
 │   ├── api/
 │   │   ├── routes.py          ← Dashboard, logs, charts, sim, threat intel, WebSocket
 │   │   ├── prediction.py      ← POST /api/predict (thread-pool, non-blocking)
@@ -98,7 +102,7 @@ ShieldNet/
 │   │   └── preprocessing.py   ← CICIDS2017 multi-CSV preprocessor
 │   ├── simulation/            ← DDoS / PortScan / BruteForce payload generators
 │   ├── network/               ← Live Scapy packet capture + CICIDS feature extractor
-│   └── models/                ← Trained .pkl artefacts (not committed to git)
+│   └── models/                ← Trained .pkl artefacts
 └── frontend/
     └── src/
         ├── pages/             ← 15 full-featured pages

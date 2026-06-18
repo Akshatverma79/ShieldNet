@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -37,7 +37,7 @@ def predict_attacks(
     is likely in the next window_minutes period.
     Uses rate-of-change heuristics on threat frequency.
     """
-    since = datetime.utcnow() - timedelta(minutes=window_minutes)
+    since = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
     recent = db.query(ThreatLog).filter(ThreatLog.timestamp >= since).all()
     total  = len(recent)
     threats = [r for r in recent if r.status == "THREAT"]
@@ -117,7 +117,7 @@ def predict_attacks(
         "window_minutes": window_minutes,
         "data_points":    total,
         "threat_rate":    round(threat_rate, 3),
-        "generated_at":   datetime.utcnow().isoformat(),
+        "generated_at":   datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -159,7 +159,7 @@ def get_user_risk(db: Session = Depends(get_db)) -> dict:
         recent_hits = db.query(func.count(ThreatLog.id)).filter(
             ThreatLog.source_ip == p["ip"],
             ThreatLog.status    == "THREAT",
-            ThreatLog.timestamp >= datetime.utcnow() - timedelta(hours=24),
+            ThreatLog.timestamp >= datetime.now(timezone.utc) - timedelta(hours=24),
         ).scalar() or 0
 
         risk = min(100, p["risk"] + recent_hits * 3)
@@ -176,7 +176,7 @@ def get_user_risk(db: Session = Depends(get_db)) -> dict:
     return {
         "profiles": profiles,
         "high_risk": [p for p in profiles if p["risk"] >= 70],
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -188,7 +188,7 @@ def get_user_risk_detail(ip: str, db: Session = Depends(get_db)) -> dict:
 
     logs = db.query(ThreatLog).filter(
         ThreatLog.source_ip == ip,
-        ThreatLog.timestamp >= datetime.utcnow() - timedelta(days=7),
+        ThreatLog.timestamp >= datetime.now(timezone.utc) - timedelta(days=7),
     ).order_by(desc(ThreatLog.timestamp)).limit(20).all()
 
     return {
@@ -237,7 +237,7 @@ def simulate_honeypot() -> dict:
 
     event = {
         "id":           len(_honeypot_logs) + 1,
-        "timestamp":    datetime.utcnow().isoformat(),
+        "timestamp":    datetime.now(timezone.utc).isoformat(),
         "attacker_ip":  attacker_ip,
         "service":      service["service"],
         "port":         service["port"],
@@ -399,7 +399,7 @@ def get_compliance(db: Session = Depends(get_db)) -> dict:
         "cis_controls":   cis_controls,
         "open_incidents": open_inc,
         "critical_vulns": crit_vuln,
-        "generated_at":   datetime.utcnow().isoformat(),
+        "generated_at":   datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -544,7 +544,7 @@ def red_attack(attack_type: str = Query("ddos", description="ddos | portscan | b
         _redblue_state["score"]["blue"] += 15
 
     event = {
-        "ts":         datetime.utcnow().isoformat(),
+        "ts":         datetime.now(timezone.utc).isoformat(),
         "team":       "RED",
         "action":     f"Launched {attack_type}",
         "detected":   detected,
@@ -567,7 +567,7 @@ def blue_defend(action: str = Query("block_ip", description="block_ip | add_rule
     _redblue_state["score"]["blue"] += pts
 
     event = {
-        "ts":     datetime.utcnow().isoformat(),
+        "ts":     datetime.now(timezone.utc).isoformat(),
         "team":   "BLUE",
         "action": label,
         "points": {"blue": pts, "red": 0},
@@ -656,8 +656,8 @@ def get_network_health(db: Session = Depends(get_db)) -> dict:
     """Returns hourly health scores for the last 24 hours."""
     data = []
     for h in range(24, 0, -1):
-        since = datetime.utcnow() - timedelta(hours=h)
-        until = datetime.utcnow() - timedelta(hours=h - 1)
+        since = datetime.now(timezone.utc) - timedelta(hours=h)
+        until = datetime.now(timezone.utc) - timedelta(hours=h - 1)
         total = db.query(func.count(ThreatLog.id)).filter(
             ThreatLog.timestamp.between(since, until)
         ).scalar() or 0
@@ -667,7 +667,7 @@ def get_network_health(db: Session = Depends(get_db)) -> dict:
         ).scalar() or 0
         health = max(0, 100 - (threats / max(total, 1)) * 100) if total > 0 else 100
         data.append({
-            "hour":   f"{(datetime.utcnow() - timedelta(hours=h-1)).strftime('%H:00')}",
+            "hour":   f"{(datetime.now(timezone.utc) - timedelta(hours=h-1)).strftime('%H:00')}",
             "health": round(health, 1),
             "events": total,
         })
