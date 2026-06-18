@@ -17,41 +17,72 @@ AI-powered analysis, and a comprehensive SOC dashboard.
 
 ---
 
-## Quick Start
+## 🚀 Quick Start Guide
 
-### 1 — Backend
+Welcome to ShieldNet! Follow these steps to get everything running on your local machine.
+
+### Prerequisites
+- Python 3.11+
+- Node.js & npm (latest LTS)
+- **(Windows Only)**: To use the real-time packet capture feature, you MUST install [Npcap](https://npcap.com/) (install it with "WinPcap API-compatible mode" enabled). Without this, the system will only run in simulation mode.
+
+---
+
+### Step 1: Start the Backend (AI & API)
+
+Open your first terminal and run:
 
 ```bash
-# From ShieldNet root
-python -m venv venv                # first time only
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Linux / macOS
+# 1. Clone the repository and enter the folder
+git clone https://github.com/Akshatverma79/ShieldNet.git
+cd ShieldNet
 
-pip install -r backend\requirements.txt
+# 2. Create and activate a virtual environment
+python -m venv venv
+venv\Scripts\activate          # On Windows
+# source venv/bin/activate     # On Linux / macOS
 
-# (Optional) Download CICIDS2017 dataset and place CSVs in dataset/
-# https://www.unb.ca/cic/datasets/ids-2017.html
+# 3. Install all required Python packages
+pip install -r backend/requirements.txt
 
-# Train the ML model (first time only — pre-trained .pkl files are included)
-python -m backend.ml.preprocessing
-python -m backend.ml.train
-
-# Start the API server
+# 4. Start the FastAPI server (runs on port 8000)
 python run.py
-# OR: uvicorn backend.app:app --reload --port 8000
 ```
+*API Docs will be available at: http://localhost:8000/docs*
 
-API docs: http://localhost:8000/docs
+---
 
-### 2 — Frontend
+### Step 2: Start the Frontend (React Dashboard)
+
+Open a **second** terminal window and run:
 
 ```bash
+# 1. Enter the frontend folder
 cd frontend
+
+# 2. Install all Node dependencies
 npm install
+
+# 3. Start the Vite development server
 npm run dev
 ```
+*Dashboard will be available at: http://localhost:3000*
 
-Dashboard: http://localhost:3000
+---
+
+### Step 3: Generating Threats!
+Once both servers are running, open `http://localhost:3000` in your browser. 
+- You will see live network traffic if you installed Npcap.
+- To generate attacks manually, go to the **Simulation Lab** tab and click the DDoS, Port Scan, or Brute Force buttons!
+
+---
+
+### Step 4 (Optional): Share Your Dashboard via ngrok
+If you want to share your locally-running dashboard with someone over the internet:
+1. Download `ngrok` and authenticate it with your free token.
+2. Open a **third** terminal and run: `ngrok http 3000`
+3. Send the generated `https://...ngrok-free.app` link to your friends! 
+*(Note: Both `python run.py` and `npm run dev` must be running for the link to work).*
 
 ---
 
