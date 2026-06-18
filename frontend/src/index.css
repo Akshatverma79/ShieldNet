@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Global resets ─────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  background-color: #060b16;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ─── Scrollbar styling ─────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: #0d1526; }
+::-webkit-scrollbar-thumb  { background: #1a2744; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #00e5ff44; }
+
+/* ─── Glassmorphism utility ─────────────────────────────────── */
+.glass {
+  background: rgba(13, 21, 38, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 229, 255, 0.08);
+}
+
+/* ─── Glow border on focus ──────────────────────────────────── */
+.glow-border {
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.05);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.glow-border:hover {
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+}
+
+/* ─── Cyber text glow ───────────────────────────────────────── */
+.text-glow-cyan  { text-shadow: 0 0 10px rgba(0, 229, 255, 0.6); }
+.text-glow-red   { text-shadow: 0 0 10px rgba(255, 59, 92, 0.6); }
+.text-glow-green { text-shadow: 0 0 10px rgba(0, 255, 153, 0.6); }
+
+/* ─── Animated gradient border ──────────────────────────────── */
+@keyframes borderGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0,229,255,0.2); }
+  50%       { box-shadow: 0 0 25px rgba(0,229,255,0.5); }
+}
+.animate-border-glow { animation: borderGlow 3s ease-in-out infinite; }
+
+/* ─── Status dot pulse ──────────────────────────────────────── */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.status-dot { animation: statusPulse 2s ease-in-out infinite; }
