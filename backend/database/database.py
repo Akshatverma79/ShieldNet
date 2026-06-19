@@ -26,7 +26,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db() -> None:
-    """Create all tables if they don't already exist."""
+    """Create all tables if they don't already exist. Drops existing tables first to clear on restart."""
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
 
